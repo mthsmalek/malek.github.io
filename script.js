@@ -40,7 +40,7 @@ const CONFIG = {
   /* ---------------- etapa 1: o botão "Não" foge ---------------- */
 
   const taunts = [
-    "Sumi com o botao so pela sua audacia",
+    "Voce teve audacia de fazer isso 😾",
     "tenta de novo, quem sabe...",
     "ele não quer ser clicado hoje",
     "só o \u201csim\u201d fica paradinho aqui",

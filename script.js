@@ -40,67 +40,152 @@ const CONFIG = {
   /* ---------------- etapa 1: o botão "Não" foge ---------------- */
 
   const taunts = [
-    "Voce teve audacia de fazer isso 😾",
-    "tenta de novo, quem sabe...",
-    "ele não quer ser clicado hoje",
-    "só o \u201csim\u201d fica paradinho aqui",
-    "acho que ele já entendeu o recado",
-  ];
-  let dodgeCount = 0;
+  "Você teve coragem de tentar 😾",
+  "Tenta outra vez 😂",
+  "Não vai conseguir...",
+  "Só existe uma resposta correta 😌",
+  "Aceita logo vai ❤️"
+];
 
-  function dodge() {
-    dodgeCount += 1;
+let dodgeCount = 0;
 
-    if (!btnNo.classList.contains("is-roaming")) {
-      // Fixa o botão na tela (relativo à janela) para ele poder
-      // fugir livremente, mantendo o layout do resto intacto.
-      const rect = btnNo.getBoundingClientRect();
-      btnNo.classList.add("is-roaming");
-      btnNo.style.top = rect.top + "px";
-      btnNo.style.left = rect.left + "px";
-      // força reflow antes de já reposicionar de novo
-      void btnNo.offsetWidth;
-    }
+// posição atual do botão
+let posX = 0;
+let posY = 0;
+let initialized = false;
 
-    const margin = 16;
-    const w = btnNo.offsetWidth || 100;
-    const h = btnNo.offsetHeight || 48;
-    const maxX = window.innerWidth - w - margin;
-    const maxY = window.innerHeight - h - margin;
+function initNoButton() {
 
-    const nextX = Math.max(margin, Math.random() * maxX);
-    const nextY = Math.max(margin, Math.random() * maxY);
+    if (initialized) return;
 
-    btnNo.style.left = nextX + "px";
-    btnNo.style.top = nextY + "px";
+    const rect = btnNo.getBoundingClientRect();
 
-    taunt.textContent = taunts[Math.min(dodgeCount - 1, taunts.length - 1)];
+    posX = rect.left;
+    posY = rect.top;
 
-    // pequeno "susto" no botão Sim, reforçando a ideia
-    const growth = Math.min(1 + dodgeCount * 0.02, 1.12);
-    btnYes.style.transform = `scale(${growth})`;
-  }
+    btnNo.style.position = "fixed";
+    btnNo.style.left = "0px";
+    btnNo.style.top = "0px";
+    btnNo.style.transform = `translate(${posX}px, ${posY}px)`;
 
-  btnNo.addEventListener("mouseenter", dodge);
-  btnNo.addEventListener("touchstart", (e) => { e.preventDefault(); dodge(); }, { passive: false });
-  btnNo.addEventListener("focus", () => { dodge(); btnNo.blur(); });
-  // salvaguarda: se por acaso alguém conseguir clicar, não acontece nada além de fugir de novo
-  btnNo.addEventListener("click", (e) => { e.preventDefault(); dodge(); });
+    initialized = true;
 
-  window.addEventListener("resize", () => {
-    if (btnNo.classList.contains("is-roaming")) {
-      const maxX = window.innerWidth - btnNo.offsetWidth - 16;
-      const maxY = window.innerHeight - btnNo.offsetHeight - 16;
-      btnNo.style.left = Math.min(parseFloat(btnNo.style.left), maxX) + "px";
-      btnNo.style.top = Math.min(parseFloat(btnNo.style.top), maxY) + "px";
-    }
-  });
+}
+
+function dodge() {
+
+    initNoButton();
+
+    dodgeCount++;
+
+    taunt.textContent =
+        taunts[Math.min(dodgeCount - 1, taunts.length - 1)];
+
+    const margin = 20;
+
+    const width = btnNo.offsetWidth;
+    const height = btnNo.offsetHeight;
+
+    const maxX = window.innerWidth - width - margin;
+    const maxY = window.innerHeight - height - margin;
+
+    let newX;
+    let newY;
+
+    do{
+
+        newX = Math.random() * maxX;
+        newY = Math.random() * maxY;
+
+    }while(
+        Math.abs(newX-posX)<120 &&
+        Math.abs(newY-posY)<80
+    );
+
+    posX = newX;
+    posY = newY;
+
+    btnNo.style.transform =
+        `translate(${posX}px, ${posY}px)`;
+
+    btnYes.style.transform =
+        `scale(${Math.min(1+dodgeCount*0.03,1.18)})`;
+
+}
+
+btnNo.addEventListener("mouseenter", dodge);
+
+btnNo.addEventListener("touchstart",(e)=>{
+
+    e.preventDefault();
+
+    dodge();
+
+},{passive:false});
+
+btnNo.addEventListener("focus",()=>{
+
+    dodge();
+
+    btnNo.blur();
+
+});
+
+btnNo.addEventListener("click",(e)=>{
+
+    e.preventDefault();
+
+    dodge();
+
+});
+
+window.addEventListener("resize",()=>{
+
+    if(!initialized) return;
+
+    const width=btnNo.offsetWidth;
+    const height=btnNo.offsetHeight;
+
+    posX=Math.min(posX,window.innerWidth-width-20);
+    posY=Math.min(posY,window.innerHeight-height-20);
+
+    btnNo.style.transform=
+        `translate(${posX}px,${posY}px)`;
+
+});
 
   /* ---------------- avançar para a etapa 2 ---------------- */
 
-  btnYes.addEventListener("click", () => {
-    goToStep(stepRestaurants);
-  });
+ btnYes.addEventListener("click", () => {
+
+    btnYes.disabled = true;
+
+    btnYes.style.transform = "scale(1.12)";
+
+    btnYes.style.boxShadow =
+        "0 0 30px rgba(201,162,39,.65)";
+
+    ticket.classList.add("fade-out");
+
+    setTimeout(() => {
+
+        goToStep(stepRestaurants);
+
+        ticket.classList.remove("fade-out");
+
+        ticket.classList.add("fade-in");
+
+        setTimeout(() => {
+
+            ticket.classList.remove("fade-in");
+
+            btnYes.disabled = false;
+
+        },400);
+
+    },300);
+
+});
 
   function goToStep(section) {
     [stepQuestion, stepRestaurants, stepConfirm].forEach((s) => {
